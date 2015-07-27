@@ -51,23 +51,27 @@ def main():
         sleepTime = 600
         newState = -1
         if response.status == 200:
-            data = str(response.read())
+            data = response.read().decode('utf-8')
             print("len of data: ", len(data))
 
-            searchFilled = "<p>Свободных мест на этот день больше нет!</p>"
-            searchEmpty = "<strong>50-летия Октября</strong>,\n.*\n.*осталось мест &mdash; <strong>([0-9]*)</strong>"
-            sFilled = re.search(searchFilled, data)
-            eFilled = re.search(searchEmpty, data)
             newState = -1
+
+            searchFilled = "<p>Свободных мест на этот день больше нет!</p>"
+            sFilled = re.search(searchFilled, data)
+
             if sFilled:
                 newState = -2
-            if eFilled:
-                newState = s.group(1)
+
+            searchEmpty = "<strong>50-летия Октября</strong>,\n.*\n.*осталось мест &mdash; <strong>([0-9]*)</strong>"
+            sEmpty = re.search(searchEmpty, data)
+            if sEmpty:
+                newState = int(sEmpty.group(1))
+
             if newState != state:
                 sleepTime = 60
             print("state: ", state, " --> ", newState)
-            if state != newState and newState > 0:
-                sendMessage(user_token, app_token, "Check reebok! " + newState + " in 50 years")
+            if (state != newState and newState > 0) or state == -4:
+                sendMessage(app_token, user_token, "Check reebok! " + str(newState) + " in 50 years")
             state = newState
         else:
             state = -3
